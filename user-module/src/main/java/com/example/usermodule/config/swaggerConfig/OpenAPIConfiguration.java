@@ -28,9 +28,9 @@ public class OpenAPIConfiguration {
 
         private Info getInfo() {
                 return new Info()
-                        .title("LOAN MANAGEMENT SYSTEM")
+                        .title("USER MANAGEMENT SYSTEM")
                         .description("""
-                        A loan management system (LMS) in a fintech app streamlines the end-to-end process of managing loans, 
+                        A user management system (LMS) in a fintech app streamlines the end-to-end process of managing loans,
                         from application to repayment.
                         """)
                         .version("0.0.1");
@@ -43,4 +43,5 @@ public class OpenAPIConfiguration {
                         .scheme(SCHEME_BEARER)
                         .bearerFormat(SCHEME_BEARER_FORMAT);
         }
+
 }

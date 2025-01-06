@@ -1,7 +1,7 @@
 package com.example.usermodule.service;
 
+import com.example.usermodule.entity.LoanUser;
 import com.example.usermodule.entity.MyUserDetails;
-import com.example.usermodule.entity.User;
 import com.example.usermodule.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -24,13 +24,16 @@ public class MyUserDetailsService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
-        User user = userRepository.findUserByEmail(email);
+        LoanUser loanUser = userRepository.findUserByEmail(email);
 
-        if (ObjectUtils.isEmpty(user)) {
-            throw new UsernameNotFoundException("User not found : " + email);
+        if (ObjectUtils.isEmpty(loanUser)) {
+            throw new UsernameNotFoundException("Loan User not found : " + email);
         }
 
-        return new MyUserDetails(user, getAuthoritiesForUser("user.getRole()"));
+        System.out.println(loanUser);
+        System.out.println(loanUser.getRole());
+
+        return new MyUserDetails(loanUser, getAuthoritiesForUser(loanUser.getRole()));
     }
 
     public Collection<? extends GrantedAuthority> getAuthoritiesForUser(String role) {

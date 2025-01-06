@@ -20,7 +20,7 @@ public class CustomAccessDeniedHandler implements AccessDeniedHandler {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication != null) {
-            log.error("User:::{}:::: attempted to access URL :::::{}::::", authentication.getName(),
+            log.error("LoanUser:::{}:::: attempted to access URL :::::{}::::", authentication.getName(),
                     request.getRequestURI());
         }
         response.sendRedirect(request.getContextPath() + "/access-denied");

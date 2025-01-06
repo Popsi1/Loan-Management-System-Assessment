@@ -5,6 +5,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.data.annotation.CreatedDate;
 import org.springframework.data.annotation.LastModifiedDate;
 
@@ -15,38 +17,35 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "users")
-public class User {
+@SQLDelete(sql = "UPDATE loan_user SET deleted = true WHERE id=?")
+@Where(clause = "deleted=false")
+public class LoanUser {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", nullable = false)
+    @Column(nullable = false)
     private Long id;
 
-    @Column(name = "name", nullable = false)
+    @Column(nullable = false)
     private String name;
 
-    @Column(name = "email", unique = true, nullable = false)
+    @Column(unique = true, nullable = false)
     private String email;
 
-    @Column(name = "role", nullable = false)
+    @Column(nullable = false)
     private String role;
 
-    @Column(name = "password", nullable = false)
+    @Column(nullable = false)
     private String password;
 
-    @Column(name = "phone_number", nullable = false)
+    @Column(nullable = false)
     private String phoneNumber;
 
     @Column(name = "deleted", nullable = false)
-    private boolean deleted;
+    private boolean deleted = Boolean.FALSE;
 
-    @Column(name = "created_at", nullable = false, updatable = false)
-    @CreatedDate
     private LocalDateTime createdAt;
 
-    @Column(name = "updated_at", nullable = false)
-    @LastModifiedDate
     private LocalDateTime updatedAt;
 }
 

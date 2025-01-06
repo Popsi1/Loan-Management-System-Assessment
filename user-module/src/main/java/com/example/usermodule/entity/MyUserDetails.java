@@ -7,11 +7,11 @@ import java.util.Collection;
 
 public class MyUserDetails implements UserDetails {
 
-        private final User user;
+        private final LoanUser loanUser;
         private final Collection<? extends GrantedAuthority> authorities;
 
-        public MyUserDetails(User user, Collection<? extends GrantedAuthority> authorities) {
-                this.user = user;
+        public MyUserDetails(LoanUser loanUser, Collection<? extends GrantedAuthority> authorities) {
+                this.loanUser = loanUser;
                 this.authorities = authorities;
         }
 
@@ -22,12 +22,12 @@ public class MyUserDetails implements UserDetails {
 
         @Override
         public String getPassword() {
-                return user.getPassword();
+                return loanUser.getPassword();
         }
 
         @Override
         public String getUsername() {
-                return user.getEmail();
+                return loanUser.getEmail();
         }
 
         @Override

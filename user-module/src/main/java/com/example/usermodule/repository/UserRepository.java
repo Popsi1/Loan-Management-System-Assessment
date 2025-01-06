@@ -1,6 +1,6 @@
 package com.example.usermodule.repository;
 
-import com.example.usermodule.entity.User;
+import com.example.usermodule.entity.LoanUser;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -8,13 +8,11 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long> {
-    User findUserByEmail(String email);
+public interface UserRepository extends JpaRepository<LoanUser, Long> {
+    LoanUser findUserByEmail(String email);
 
-    User findUserByIdAndDeleted(Long userId, boolean deleted);
-
-    @Query("SELECT u FROM User u ORDER BY u.createdAt DESC")
-    Page<User> allUsers(Pageable pageable);
+    @Query("SELECT u FROM LoanUser u ORDER BY u.createdAt DESC")
+    Page<LoanUser> allUsers(Pageable pageable);
 }
 
 

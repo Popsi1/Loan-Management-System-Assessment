@@ -34,7 +34,7 @@ public class JwtAuthSecurityConfig {
         };
         private static final String[] WEB_WHITELIST = {
                 "/api/users/login",
-                "/api/v1/users/signup"
+                "/api/users/signup"
         };
 
         private final MyUserDetailsService userService;
