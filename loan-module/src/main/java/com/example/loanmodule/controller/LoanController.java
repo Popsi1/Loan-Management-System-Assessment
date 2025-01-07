@@ -95,6 +95,7 @@ public class LoanController {
     }
 
     @GetMapping("/transactions/file")
+    @Operation(summary = "Generate Transaction Statement")
     public void exportToExcel(HttpServletResponse response, @RequestHeader("X-User-Id") String userId,
                               @RequestParam String startDate, @RequestParam String endDate) throws IOException {
         this.transactionLogService.exportToExcel(response, userId, startDate, endDate);

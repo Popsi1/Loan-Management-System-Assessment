@@ -63,6 +63,7 @@ This is an application capable of
 - Get a Loan Application Details;
 - Disburse amount to Loan User Account;
 - Repayment of Loan Amount;
+- Generate Transaction Statement
 
 ### Prerequisites
 
