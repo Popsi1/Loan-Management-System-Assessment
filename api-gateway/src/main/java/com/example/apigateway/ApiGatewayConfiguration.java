@@ -20,5 +20,4 @@ public class ApiGatewayConfiguration {
                         .uri("lb://loanUser-module"))
                 .build();
     }
-
 }
