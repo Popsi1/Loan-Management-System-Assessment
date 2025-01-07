@@ -161,7 +161,8 @@ public class LoanServiceImpl implements LoanService {
                 bankDetails,
                 loanApplication.getLoanAmount(),
                 disbursement.getTransactionId(),
-                TransactionType.DISBURSE.name()
+                TransactionType.DISBURSE.name(),
+                loanApplication.getUserId()
         );
 
         // Generate repayment schedule

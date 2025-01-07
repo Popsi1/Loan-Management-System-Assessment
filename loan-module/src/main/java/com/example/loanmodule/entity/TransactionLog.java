@@ -21,6 +21,8 @@ public class TransactionLog {
     @Column(nullable = false)
     private Long id;
 
+    private Long userId;
+
     private String transactionId;
     private String transactionType;
     private Long loanApplicationId;

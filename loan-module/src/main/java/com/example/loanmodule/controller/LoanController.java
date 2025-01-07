@@ -9,14 +9,18 @@ import com.example.loanmodule.repository.LoanApplicationRepository;
 import com.example.loanmodule.service.LoanService;
 import com.example.loanmodule.service.RepaymentService;
 import com.example.loanmodule.service.RiskAssessmentService;
+import com.example.loanmodule.service.TransactionLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.io.IOException;
 
 @RestController
 @RequestMapping("/api/loans")
@@ -28,6 +32,7 @@ public class LoanController {
     private final RiskAssessmentService riskAssessmentService;
     private final LoanService loanService;
     private final RepaymentService repaymentService;
+    private final TransactionLogService transactionLogService;
 
     @PostMapping("/application")
     @Operation(summary = "Create a Loan Application")
@@ -78,15 +83,21 @@ public class LoanController {
     @PostMapping("/repayments/{repaymentScheduleId}")
     @Operation(summary = "Repayment of Loan Amount")
     public ResponseEntity<?> rePayment(@PathVariable Long repaymentScheduleId, @RequestBody @Valid Repayment repayment
-            , @RequestHeader("X-User-Role") String role)
+            , @RequestHeader("X-User-Role") String role, @RequestHeader("X-User-Id") String userId)
             throws JsonProcessingException {
 
         if (!RoleType.USER.name().equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
         }
 
-        RepaymentSchedule updatedSchedule = repaymentService.rePayment(repaymentScheduleId, repayment);
+        RepaymentSchedule updatedSchedule = repaymentService.rePayment(repaymentScheduleId, repayment, Long.valueOf(userId));
         return ResponseEntity.ok(updatedSchedule);
+    }
+
+    @GetMapping("/transactions/file")
+    public void exportToExcel(HttpServletResponse response, @RequestHeader("X-User-Id") String userId,
+                              @RequestParam String startDate, @RequestParam String endDate) throws IOException {
+        this.transactionLogService.exportToExcel(response, userId, startDate, endDate);
     }
 
 }

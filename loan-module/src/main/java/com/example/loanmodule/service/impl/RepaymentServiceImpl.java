@@ -48,7 +48,7 @@ public class RepaymentServiceImpl implements RepaymentService {
     }
 
     @Transactional
-    public RepaymentSchedule rePayment(Long repaymentScheduleId, Repayment repayment) throws JsonProcessingException {
+    public RepaymentSchedule rePayment(Long repaymentScheduleId, Repayment repayment, Long userId) throws JsonProcessingException {
         Optional<RepaymentSchedule> scheduleOpt = repaymentScheduleRepository.findById(repaymentScheduleId);
 
         if (scheduleOpt.isEmpty()) {
@@ -81,7 +81,7 @@ public class RepaymentServiceImpl implements RepaymentService {
 
         transactionLogService.recordTransaction(schedule.getLoanApplicationId(),
                 repayment.getSenderBankDetails(), repayment.getReceiverBankDetails(),
-                repayment.getAmount(), transactionId, TransactionType.REPAY.name());
+                repayment.getAmount(), transactionId, TransactionType.REPAY.name(), userId);
 
         return repaymentScheduleRepository.save(schedule);
     }

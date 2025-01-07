@@ -11,5 +11,5 @@ public interface RepaymentService {
     public List<RepaymentSchedule> generateRepaymentSchedule(LoanApplication loanApplication);
     public Double calculatePenalty(RepaymentSchedule schedule);
 
-    public RepaymentSchedule rePayment(Long repaymentScheduleId, Repayment repayment) throws JsonProcessingException;
+    public RepaymentSchedule rePayment(Long repaymentScheduleId, Repayment repayment, Long userId) throws JsonProcessingException;
 }
