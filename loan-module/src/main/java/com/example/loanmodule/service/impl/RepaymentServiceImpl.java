@@ -4,11 +4,14 @@ import com.example.loanmodule.dtos.request.Repayment;
 import com.example.loanmodule.entity.LoanApplication;
 import com.example.loanmodule.entity.RepaymentSchedule;
 import com.example.loanmodule.enums.TransactionType;
+import com.example.loanmodule.exception.BadRequestException;
+import com.example.loanmodule.exception.ResourceNotFoundException;
 import com.example.loanmodule.repository.RepaymentScheduleRepository;
 import com.example.loanmodule.service.FundTransferService;
 import com.example.loanmodule.service.RepaymentService;
 import com.example.loanmodule.service.TransactionLogService;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -37,27 +40,29 @@ public class RepaymentServiceImpl implements RepaymentService {
             installment.setLoanApplicationId(loanApplication.getId());
             installment.setDueDate(LocalDate.now().plusMonths(i));
             installment.setInstallmentAmount(monthlyInstallment);
+            installment.setCreatedAt(LocalDateTime.now());
             schedule.add(installment);
         }
 
         return repaymentScheduleRepository.saveAll(schedule);
     }
 
+    @Transactional
     public RepaymentSchedule rePayment(Long repaymentScheduleId, Repayment repayment) throws JsonProcessingException {
         Optional<RepaymentSchedule> scheduleOpt = repaymentScheduleRepository.findById(repaymentScheduleId);
 
         if (scheduleOpt.isEmpty()) {
-            throw new IllegalArgumentException("Repayment schedule not found");
+            throw new ResourceNotFoundException("Repayment schedule not found");
         }
 
         RepaymentSchedule schedule = scheduleOpt.get();
 
         if (schedule.getIsPaid()) {
-            throw new IllegalStateException("Payment already completed for this installment");
+            throw new BadRequestException("Payment already completed for this installment");
         }
 
         if (repayment.getAmount() < schedule.getInstallmentAmount()) {
-            throw new IllegalArgumentException("Paid amount is less than the installment amount");
+            throw new BadRequestException("Paid amount is less than the installment amount");
         }
 
         String transactionId;

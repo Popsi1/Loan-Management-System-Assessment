@@ -6,7 +6,7 @@ import com.example.loanmodule.dtos.response.ApiDataResponseDto;
 import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface LoanService {
-    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto);
+    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto, Long userId);
     public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status);
     public ApiDataResponseDto getLoanApplication(Long loanApplicationId);
 

@@ -21,6 +21,9 @@ public class LoanApplication {
     private Long id;
 
     @Column(nullable = false)
+    private Long userId;
+
+    @Column(nullable = false)
     private String fullName;
 
     @Column(nullable = false)

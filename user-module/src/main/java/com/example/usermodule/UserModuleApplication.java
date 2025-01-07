@@ -13,9 +13,6 @@ public class UserModuleApplication {
 
     public static void main(String[] args) {
         SpringApplication.run(UserModuleApplication.class, args);
-        Key key = Keys.secretKeyFor(SignatureAlgorithm.HS512); // Generates a secure 512-bit key
-        String base64EncodedKey = Base64.getEncoder().encodeToString(key.getEncoded());
-        System.out.println("Generated Key: " + base64EncodedKey);
     }
 
 }

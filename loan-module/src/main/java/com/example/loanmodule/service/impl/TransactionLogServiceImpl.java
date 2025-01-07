@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.Objects;
 
 @Service
@@ -34,6 +35,7 @@ public class TransactionLogServiceImpl implements TransactionLogService {
         transLog.setPayerbankDetails(payerBankDetails1);
         transLog.setReceiverbankDetails(receiverBankDetails1);
         transLog.setAmount(amount);
+        transLog.setTimestamp(LocalDateTime.now());
         transactionLogRepository.save(transLog);
 
         log.info("Transaction recorded in accounting logs");

@@ -32,22 +32,20 @@ public class UserServiceImpl implements UserService{
 
     public ApiDataResponseDto createUser(UserRegister userDto) {
 
-        System.out.println(1);
         LoanUser loanUser = userRepository.save(userHelper.buildUserEntity(userDto));
-        System.out.println(2);
-        System.out.println(loanUser);
-        System.out.println(3);
-        return DataResponseUtils.successResponse("LoanUser successfully created",
+        return DataResponseUtils.successResponse("Loan User successfully created",
                 userHelper.buildUserResponseEntity(loanUser));
     }
 
     public ApiDataResponseDto updateUser(UpdateUser userDto, Long userId) {
 
         LoanUser loanUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("LoanUser not found :: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan User not found :: " + userId));
 
-        return DataResponseUtils.successResponse("LoanUser details successfully updated",
-                userHelper.buildUserResponseEntity(userRepository.save(userHelper.buildUserEntity(loanUser, userDto))));
+        userHelper.updateUserEntity(loanUser, userDto);
+
+        return DataResponseUtils.successResponse("Loan User details successfully updated",
+                userHelper.buildUserResponseEntity(userRepository.save(loanUser)));
     }
 
     public ApiDataResponseDto getUsers(Integer page, Integer pageSize) {
@@ -67,29 +65,25 @@ public class UserServiceImpl implements UserService{
 
     public ApiDataResponseDto getUser(Long userId) {
 
-        System.out.println(111);
         LoanUser loanUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("LoanUser not found :: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan User not found :: " + userId));
 
-        System.out.println(222);
-
-        return DataResponseUtils.successResponse("LoanUser details successfully fetched",
+        return DataResponseUtils.successResponse("Loan User details successfully fetched",
                 userHelper.buildUserResponseEntity(loanUser));
     }
 
     public ApiDataResponseDto deleteUser(Long userId) {
         LoanUser loanUser = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("LoanUser not found :: " + userId));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan User not found :: " + userId));
 
         userRepository.delete(loanUser);
 
-        return DataResponseUtils.successResponse("LoanUser successfully deleted", null);
+        return DataResponseUtils.successResponse("Loan User successfully deleted", null);
     }
 
-    public LoginResponseDto getLoginReponseDto(String email, String token){
-        LoanUser loanUser = userRepository.findUserByEmail(email);
+    public LoginResponseDto getLoginReponseDto(LoanUser loanUser, String token){
         return LoginResponseDto.builder()
-                .email(email)
+                .email(loanUser.getEmail())
                 .roleName(loanUser.getRole())
                 .accessToken(token)
                 .build();

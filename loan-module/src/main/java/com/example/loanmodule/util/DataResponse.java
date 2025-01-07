@@ -23,4 +23,13 @@ public class DataResponse {
                 .code(HttpStatus.BAD_REQUEST.value())
                 .build();
     }
+
+    public static ApiDataResponseDto errorResponse(String message, HttpStatus httpStatus) {
+        return ApiDataResponseDto.builder()
+                .timestamp(LocalDateTime.now())
+                .message(message)
+                .status(false)
+                .code(httpStatus.value())
+                .build();
+    }
 }

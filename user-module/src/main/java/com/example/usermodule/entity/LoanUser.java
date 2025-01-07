@@ -44,8 +44,10 @@ public class LoanUser {
     @Column(name = "deleted", nullable = false)
     private boolean deleted = Boolean.FALSE;
 
+    @Column(nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(nullable = false)
     private LocalDateTime updatedAt;
 }
 

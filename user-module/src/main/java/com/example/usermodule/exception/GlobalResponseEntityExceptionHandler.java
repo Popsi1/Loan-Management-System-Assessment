@@ -42,15 +42,9 @@ public class GlobalResponseEntityExceptionHandler extends ResponseEntityExceptio
                 return ResponseEntity.badRequest().body(fieldErrors);
         }
 
-
         @ExceptionHandler(ResourceNotFoundException.class)
         public ResponseEntity<Object> resourceNotFoundException(ResourceNotFoundException e) {
-                return ResponseEntity.of(Optional.of(DataResponseUtils.errorResponse(e.getMessage())));
-        }
-
-        @ExceptionHandler(Exception.class)
-        public ResponseEntity<Object> exception(Exception e) {
-                return ResponseEntity.of(Optional.of(DataResponseUtils.errorResponse(e.getMessage())));
+                return ResponseEntity.of(Optional.of(DataResponseUtils.errorResponse(e.getMessage(), HttpStatus.NOT_FOUND)));
         }
 
 }

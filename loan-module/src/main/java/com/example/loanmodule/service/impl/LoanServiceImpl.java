@@ -8,13 +8,18 @@ import com.example.loanmodule.entity.LoanDisbursement;
 import com.example.loanmodule.enums.LoanApplicationStatus;
 import com.example.loanmodule.enums.LoanDisbursementStatus;
 import com.example.loanmodule.enums.TransactionType;
+import com.example.loanmodule.exception.BadRequestException;
+import com.example.loanmodule.exception.ResourceNotFoundException;
 import com.example.loanmodule.helper.LoanHelper;
 import com.example.loanmodule.repository.LoanApplicationRepository;
 import com.example.loanmodule.repository.LoanDisbursementRepository;
 import com.example.loanmodule.service.*;
 import com.example.loanmodule.util.DataResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.EnumUtils;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -31,7 +36,7 @@ public class LoanServiceImpl implements LoanService {
 
     private static final double BASE_INTEREST_RATE = 5.0;
 
-    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto) {
+    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto, Long userId) {
 
         double incomeToLoanRatio = loanApplicationDto.getAnnualIncome() / loanApplicationDto.getLoanAmount();
         String risk = riskAssessmentService.assessRisk(incomeToLoanRatio);
@@ -40,7 +45,7 @@ public class LoanServiceImpl implements LoanService {
             throw new RuntimeException("Loan application denied due to high risk.");
         }
 
-        LoanApplication loanApplication = LoanHelper.buildLoanApplicationEntity(loanApplicationDto);
+        LoanApplication loanApplication = LoanHelper.buildLoanApplicationEntity(loanApplicationDto, userId);
 
         loanApplication.setRiskLevel(risk);
         loanApplication.setInterestRate(calculateInterestRate(incomeToLoanRatio));
@@ -53,6 +58,10 @@ public class LoanServiceImpl implements LoanService {
     }
 
     public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status) {
+
+        if (!EnumUtils.isValidEnum(LoanApplicationStatus.class, status))
+            throw new BadRequestException("Invalid Status");
+
         LoanApplication loanApplication = loanApplicationRepository.findById(loanApplicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
 
@@ -78,7 +87,7 @@ public class LoanServiceImpl implements LoanService {
 
     public ApiDataResponseDto getLoanApplication(Long loanApplicationId) {
         LoanApplication loanApplication = loanApplicationRepository.findById(loanApplicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan application not found"));
 
         return DataResponse.successResponse("Loan Application created", LoanHelper.buildLoanApplicationResponseEntity(loanApplication));
 
@@ -93,36 +102,69 @@ public class LoanServiceImpl implements LoanService {
         return (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenureInMonths)) /
                 (Math.pow(1 + monthlyRate, tenureInMonths) - 1);
     }
-    
+
+    @Transactional
     public ApiDataResponseDto disburseLoan(Long loanApplicationId, BankDetails bankDetails) throws JsonProcessingException {
         LoanApplication loanApplication = loanApplicationRepository.findById(loanApplicationId)
-                .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Loan application not found"));
 
-        if (!"APPROVED".equals(loanApplication.getStatus())) {
-            throw new IllegalStateException("Loan application must be approved for disbursement.");
-        }
+        validateLoanApplicationForDisbursement(loanApplication);
 
         LoanDisbursement disbursement = LoanHelper.buildLoanDisbursementEntity(loanApplication, bankDetails);
 
         String transactionId = null;
         try {
-            // Simulate fund transfer
-            transactionId = fundTransferService.transferFunds(bankDetails, loanApplication.getLoanAmount());
-            disbursement.setTransactionId(transactionId);
-            disbursement.setStatus(LoanDisbursementStatus.SUCCESS.name());
+            // Attempt fund transfer and update disbursement details
+            transactionId = processFundTransfer(bankDetails, loanApplication, disbursement);
         } catch (Exception e) {
-            disbursement.setTransactionId(transactionId);
-            disbursement.setStatus(LoanDisbursementStatus.FAILED.name());
-            throw new RuntimeException("Loan disbursement failed: " + e.getMessage(), e);
+            handleFundTransferFailure(disbursement, e);
         }
 
 
         LoanDisbursement savedDisbursement = loanDisbursementRepository.save(disbursement);
-        
-        // Save transaction
-        transactionLogService.recordTransaction(loanApplicationId, null, bankDetails,
-                loanApplication.getLoanAmount(), transactionId, TransactionType.DISBURSE.name());
 
+        executeAsyncTasks(loanApplication, bankDetails, savedDisbursement);
+
+        return DataResponse.successResponse("Loan Application created",
+                LoanHelper.buildLoanDisbursementResponseEntity(loanApplication, savedDisbursement));
+    }
+
+    private void validateLoanApplicationForDisbursement(LoanApplication loanApplication) {
+        if (!LoanApplicationStatus.APPROVED.name().equals(loanApplication.getStatus())) {
+            throw new BadRequestException("Loan application must be approved for disbursement.");
+        }
+
+        if (!"APPROVED".equals(loanApplication.getStatus())) {
+            throw new BadRequestException("Loan application must be approved for disbursement.");
+        }
+    }
+
+    private String processFundTransfer(BankDetails bankDetails, LoanApplication loanApplication, LoanDisbursement disbursement) {
+        String transactionId = fundTransferService.transferFunds(bankDetails, loanApplication.getLoanAmount());
+        disbursement.setTransactionId(transactionId);
+        disbursement.setStatus(LoanDisbursementStatus.SUCCESS.name());
+        return transactionId;
+    }
+
+    private void handleFundTransferFailure(LoanDisbursement disbursement, Exception e) {
+        disbursement.setTransactionId(null);
+        disbursement.setStatus(LoanDisbursementStatus.FAILED.name());
+        throw new RuntimeException("Loan disbursement failed: " + e.getMessage(), e);
+    }
+
+    @Async
+    public void executeAsyncTasks(LoanApplication loanApplication, BankDetails bankDetails, LoanDisbursement disbursement) throws JsonProcessingException {
+        // Record transaction log
+        transactionLogService.recordTransaction(
+                loanApplication.getId(),
+                null,
+                bankDetails,
+                loanApplication.getLoanAmount(),
+                disbursement.getTransactionId(),
+                TransactionType.DISBURSE.name()
+        );
+
+        // Generate repayment schedule
         repaymentService.generateRepaymentSchedule(loanApplication);
 
         // Notify user
@@ -131,9 +173,5 @@ public class LoanServiceImpl implements LoanService {
                 loanApplication.getLoanAmount(),
                 bankDetails.getAccountNumber()
         );
-
-        return DataResponse.successResponse("Loan Application created",
-                LoanHelper.buildLoanDisbursementResponseEntity(loanApplication, savedDisbursement));
     }
-
 }

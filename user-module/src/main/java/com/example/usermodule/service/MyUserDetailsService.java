@@ -30,9 +30,6 @@ public class MyUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Loan User not found : " + email);
         }
 
-        System.out.println(loanUser);
-        System.out.println(loanUser.getRole());
-
         return new MyUserDetails(loanUser, getAuthoritiesForUser(loanUser.getRole()));
     }
 

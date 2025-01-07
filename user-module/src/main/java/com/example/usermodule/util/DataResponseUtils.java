@@ -25,6 +25,15 @@ public class DataResponseUtils {
                         .build();
         }
 
+        public static ApiDataResponseDto errorResponse(String message, HttpStatus httpStatus) {
+                return ApiDataResponseDto.builder()
+                        .timestamp(LocalDateTime.now())
+                        .message(message)
+                        .status(false)
+                        .code(httpStatus.value())
+                        .build();
+        }
+
         public static ApiDataResponseDto errorResponse(Throwable throwable) {
                 String message = throwable.getCause().getMessage();
                 return ApiDataResponseDto.builder()

@@ -9,8 +9,10 @@ import com.example.loanmodule.entity.LoanDisbursement;
 import com.example.loanmodule.enums.LoanApplicationStatus;
 import com.example.loanmodule.enums.LoanDisbursementStatus;
 
+import java.time.LocalDateTime;
+
 public class LoanHelper {
-    public static LoanApplication buildLoanApplicationEntity(LoanApplicationRequest loanApplicationRequest){
+    public static LoanApplication buildLoanApplicationEntity(LoanApplicationRequest loanApplicationRequest, Long userId){
         return LoanApplication.builder()
                 .email(loanApplicationRequest.getEmail())
                 .fullName(loanApplicationRequest.getFullName())
@@ -18,6 +20,8 @@ public class LoanHelper {
                 .loanAmount(loanApplicationRequest.getLoanAmount())
                 .tenure(loanApplicationRequest.getTenure())
                 .status(LoanApplicationStatus.PENDING.name())
+                .userId(userId)
+                .createdAt(LocalDateTime.now())
                 .build();
     }
 
@@ -27,6 +31,7 @@ public class LoanHelper {
                 .accountNumber(bankDetails.getAccountNumber())
                 .disbursedAmount(loanApplication.getLoanAmount())
                 .status(LoanDisbursementStatus.PENDING.name())
+                .disbursementDate(LocalDateTime.now())
                 .build();
     }
     public static LoanDisbursementResponse buildLoanDisbursementResponseEntity(LoanApplication loanApplication, LoanDisbursement loanDisbursement){
@@ -45,6 +50,7 @@ public class LoanHelper {
     public static LoanApplicationResponse buildLoanApplicationResponseEntity(LoanApplication loanApplication){
         return LoanApplicationResponse.builder()
                 .id(loanApplication.getId())
+                .userId(loanApplication.getUserId())
                 .annualIncome(loanApplication.getAnnualIncome())
                 .loanAmount(loanApplication.getLoanAmount())
                 .emi(loanApplication.getEmi())

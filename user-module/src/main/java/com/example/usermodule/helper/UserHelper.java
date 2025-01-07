@@ -29,14 +29,12 @@ public class UserHelper {
                 .build();
     }
 
-    public LoanUser buildUserEntity(LoanUser loanUser, UpdateUser userDto){
-        return LoanUser.builder()
-                .email(userDto.getEmail())
-                .phoneNumber(userDto.getPhoneNumber())
-                .role(userDto.getRole())
-                .name(userDto.getName())
-                .updatedAt(LocalDateTime.now())
-                .build();
+    public void updateUserEntity(LoanUser loanUser, UpdateUser userDto){
+        loanUser.setEmail(userDto.getEmail());
+        loanUser.setPhoneNumber(userDto.getPhoneNumber());
+        loanUser.setRole(userDto.getRole());
+        loanUser.setName(userDto.getName());
+        loanUser.setUpdatedAt(LocalDateTime.now());
     }
 
     public UserResponseDto buildUserResponseEntity(LoanUser loanUser){
