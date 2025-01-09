@@ -14,7 +14,6 @@ import static java.lang.annotation.ElementType.FIELD;
 @Documented
 @Constraint(validatedBy = {RoleTypeValidator.class})
 @Target({FIELD})
-@NotBlank(message = "Role must not be blank")
 @Retention(RetentionPolicy.RUNTIME)
 public @interface RoleTypeValidation {
 

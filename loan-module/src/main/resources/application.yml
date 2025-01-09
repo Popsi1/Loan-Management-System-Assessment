@@ -1,0 +1,41 @@
+#server:
+#  servlet:
+#    context-path: /
+#  port:
+#    5000
+#
+#spring:
+#  application:
+#    name: category-service
+#  datasource:
+#    url: jdbc:postgresql://localhost:5432/loan
+#    username: postgres
+#    password: postgres
+#    driver-class-name: org.postgresql.Driver
+#  jpa:
+#    database-platform: org.hibernate.dialect.PostgreSQLDialect
+#    hibernate:
+#      ddl-auto: update
+#    show-sql: true
+#
+#
+#openapi:
+#  service:
+#    title: category-service doc
+#    version: 1.0.0
+#    url: http://localhost:8080
+#
+#springdoc:
+#  api-docs:
+#    path: /category-service/v3/api-docs
+#  swagger-ui:
+#    path: /category-service/swagger-ui.html
+#
+#eureka:
+#  client:
+#    register-with-eureka: true
+#    fetch-registry: true
+#    service-url:
+#      defaultZone: http://localhost:8761/eureka
+#  instance:
+#    hostname: localhost

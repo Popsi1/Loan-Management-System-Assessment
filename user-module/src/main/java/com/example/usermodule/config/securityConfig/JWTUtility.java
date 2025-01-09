@@ -37,12 +37,12 @@ public class JWTUtility implements Serializable {
         // Token validity in milliseconds (5 hours)
         private static final long JWT_TOKEN_VALIDITY = 5 * 60 * 60 * 1000;
 
-        // Secret key from application.properties
         @Value("${jwt.secret}")
         private String secret;
 
         private Key getSigningKey() {
                 // Ensure the secret is converted to a secure Key object
+                // Secret key from application.properties
                 byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
                 return Keys.hmacShaKeyFor(keyBytes);
         }

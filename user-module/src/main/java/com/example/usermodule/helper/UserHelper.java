@@ -5,6 +5,7 @@ import com.example.usermodule.dtos.request.UserRegister;
 import com.example.usermodule.dtos.response.UserResponseDto;
 import com.example.usermodule.entity.LoanUser;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
@@ -30,10 +31,20 @@ public class UserHelper {
     }
 
     public void updateUserEntity(LoanUser loanUser, UpdateUser userDto){
-        loanUser.setEmail(userDto.getEmail());
-        loanUser.setPhoneNumber(userDto.getPhoneNumber());
-        loanUser.setRole(userDto.getRole());
-        loanUser.setName(userDto.getName());
+        if (StringUtils.isNotBlank(userDto.getEmail())){
+            loanUser.setEmail(userDto.getEmail());
+        }
+        if (StringUtils.isNotBlank(userDto.getPhoneNumber())){
+            loanUser.setPhoneNumber(userDto.getPhoneNumber());
+        }
+
+        if (StringUtils.isNotBlank(userDto.getName())){
+            loanUser.setName(userDto.getName());
+        }
+        if (StringUtils.isNotBlank(userDto.getRole())){
+            loanUser.setRole(userDto.getRole());
+        }
+
         loanUser.setUpdatedAt(LocalDateTime.now());
     }
 

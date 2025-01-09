@@ -1,0 +1,58 @@
+#server:
+#  servlet:
+#    context-path: /
+#  port:
+#    8080
+#
+#
+#
+#
+#spring:
+#  main:
+#    web-application-type: reactive
+#  application:
+#    name: api-gateway-service
+##  cloud:
+##    gateway:
+##      httpclient:
+##        connect-timeout: 20000
+##        response-timeout: 7s
+##      routes:
+##        - id: category-service
+##          uri: lb://category-service
+##          predicates:
+##            - Path=/category/** , /category-service/v3/api-docs
+##          filters:
+##            - StripPrefix=1
+##        - id: product-service
+##          uri: lb://product-service
+##          predicates:
+##            - Path=/product/** , /product-service/v3/api-docs
+##          filters:
+##            - StripPrefix=1
+#
+#springdoc:
+#  enable-native-support: true
+#  api-docs:
+#    enabled: true
+#  swagger-ui:
+#    enabled: true
+#    path: /swagger-ui.html
+#    config-url: /v3/api-docs/swagger-config
+#    urls:
+#      - url: /v3/api-docs
+#        name: API Gateway Service
+#        display-name: API Gateway Service
+##      - url: /category-service/v3/api-docs
+##        name: Category Service
+##        display-name: Category Service
+##      - url: /product-service/v3/api-docs
+##        name: Product Service
+##        display-name: Product Service
+#
+#eureka:
+#  client:
+#    register-with-eureka: true
+#    fetch-registry: true
+#  instance:
+#    hostname: localhost

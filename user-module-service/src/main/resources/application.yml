@@ -1,0 +1,52 @@
+server:
+  servlet:
+    context-path: /
+  port:
+    5001
+
+spring:
+  application:
+    name: user-service
+  datasource:
+    url: jdbc:postgresql://localhost:5432/loan
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+  main:
+    allow-bean-definition-overriding: true
+    allow-circular-references: true
+
+springdoc:
+  api-docs:
+    path: /user-service/v3/api-docs
+  swagger-ui:
+    path: /user-service/swagger-ui.html
+
+eureka:
+  client:
+    register-with-eureka: true
+    fetch-registry: true
+    service-url:
+      defaultZone: http://localhost:8761/eureka
+  instance:
+    hostname: localhost
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: always
+
+jwt:
+  secret: 2NufeUmpnahWB64CpM/1j3zMTtRBzWAShK0Lo9avMFyC3nqYjyK67Rr6w1ja9TrAyP0/ko0ngMPwDD3uRH/YCw==
+
+
+

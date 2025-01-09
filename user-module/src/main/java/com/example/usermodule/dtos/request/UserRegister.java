@@ -26,5 +26,6 @@ public class UserRegister {
     private String password;
 
     @RoleTypeValidation
+    @NotBlank(message = "Role must not be blank")
     private String role;
 }

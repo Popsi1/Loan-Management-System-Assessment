@@ -37,8 +37,14 @@ public class LoanController {
     @PostMapping("/application")
     @Operation(summary = "Create a Loan Application")
     public ResponseEntity<?> applyForLoan(@RequestBody @Valid LoanApplicationRequest loanApplicationRequest
-    , @RequestHeader("X-User-Role") String role, @RequestHeader("X-User-Id") String userId) {
+            , @RequestHeader(value = "X-User-Role", required = false) String role, @RequestHeader(value = "X-User-Id", required = false) String userId) {
 
+        // If no role or user ID is provided, return unauthorized or a forbidden status
+        if (role == null || userId == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing required headers: X-User-Role or X-User-Id");
+        }
+
+        // Check if the role is USER
         if (!RoleType.USER.name().equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
         }
@@ -49,7 +55,10 @@ public class LoanController {
     @PatchMapping("/application/{loanApplicationId}")
     @Operation(summary = "Update Loan Application Status")
     public ResponseEntity<?> updateLoanApplicationStatus(@PathVariable Long loanApplicationId, @RequestParam String status
-            , @RequestHeader("X-User-Role") String role) {
+            , @RequestHeader(value = "X-User-Role", required = false) String role) {
+        if (role == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing required headers: X-User-Role");
+        }
 
         if (!RoleType.ADMIN.name().equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
@@ -60,19 +69,27 @@ public class LoanController {
     @GetMapping("/application/{loanApplicationId}")
     @Operation(summary = "Get a Loan Application Details")
     public ResponseEntity<?> getLoanApplication(@PathVariable Long loanApplicationId
-            , @RequestHeader("X-User-Role") String role) {
+            , @RequestHeader(value = "X-User-Role", required = false) String role) {
+        if (role == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing required headers: X-User-Role");
+        }
 
-        if (!RoleType.ADMIN.name().equals(role) && !RoleType.USER.name().equals(role)) {
+        if (!(RoleType.ADMIN.name().equals(role) || RoleType.USER.name().equals(role))) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
         }
+
         return new ResponseEntity<>(loanService.getLoanApplication(loanApplicationId), HttpStatus.OK);
     }
 
+    //admin that disburse id is needed
     @PostMapping("/disburse/{loanApplicationId}")
     @Operation(summary = "Disburse amount to Loan User Account")
     public ResponseEntity<?> disburseLoan(@PathVariable Long loanApplicationId, @RequestBody @Valid BankDetails bankDetails
-            , @RequestHeader("X-User-Role") String role)
+            , @RequestHeader(value = "X-User-Role", required = false) String role, @RequestHeader(value = "X-User-Id", required = false) String userId)
             throws JsonProcessingException {
+        if (role == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing required headers: X-User-Role");
+        }
 
         if (!RoleType.ADMIN.name().equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
@@ -83,8 +100,12 @@ public class LoanController {
     @PostMapping("/repayments/{repaymentScheduleId}")
     @Operation(summary = "Repayment of Loan Amount")
     public ResponseEntity<?> rePayment(@PathVariable Long repaymentScheduleId, @RequestBody @Valid Repayment repayment
-            , @RequestHeader("X-User-Role") String role, @RequestHeader("X-User-Id") String userId)
+            , @RequestHeader(value = "X-User-Role", required = false) String role, @RequestHeader(value = "X-User-Id", required = false) String userId)
             throws JsonProcessingException {
+
+        if (role == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Missing required headers: X-User-Role");
+        }
 
         if (!RoleType.USER.name().equals(role)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Access Denied");
@@ -96,7 +117,7 @@ public class LoanController {
 
     @GetMapping("/transactions/file")
     @Operation(summary = "Generate Transaction Statement")
-    public void exportToExcel(HttpServletResponse response, @RequestHeader("X-User-Id") String userId,
+    public void exportToExcel(HttpServletResponse response, @RequestHeader(value = "X-User-Id", required = false) String userId,
                               @RequestParam String startDate, @RequestParam String endDate) throws IOException {
         this.transactionLogService.exportToExcel(response, userId, startDate, endDate);
     }
