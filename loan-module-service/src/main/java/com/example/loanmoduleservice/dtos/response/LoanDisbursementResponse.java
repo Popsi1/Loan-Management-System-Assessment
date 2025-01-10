@@ -3,6 +3,7 @@ package com.example.loanmoduleservice.dtos.response;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 @Data
 @Builder
@@ -15,7 +16,7 @@ public class LoanDisbursementResponse {
 
     private String accountNumber;
 
-    private Double disbursedAmount;
+    private BigDecimal disbursedAmount;
     private String transactionId;
 
     private LocalDateTime disbursementDate;

@@ -1,41 +1,34 @@
 package com.example.loanmoduleservice.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
-
 @Entity
-@Data
+@Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class LoanDisbursement {
-
+@EntityListeners(AuditingEntityListener.class)
+public class AuditLog {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(nullable = false)
+    @Column(nullable = false, updatable = false)
     private Long id;
 
     @Column(nullable = false)
-    private Long loanApplicationId;
+    private Long actionBy;
 
     @Column(nullable = false)
-    private String accountNumber;
+    private String eventType;
 
     @Column(nullable = false)
-    private BigDecimal disbursedAmount;
-
-    @Column(nullable = false)
-    private String transactionId;
+    private String description;
 
     @Column(nullable = false, updatable = false)
     @CreatedDate
-    private LocalDateTime disbursementDate;
-    private String status;
+    private LocalDateTime createdAt;
 }

@@ -22,6 +22,7 @@ public class LoanHelper {
                 .loanAmount(loanApplicationRequest.getLoanAmount())
                 .tenure(loanApplicationRequest.getTenure())
                 .status(LoanApplicationStatus.PENDING.name())
+                .isAccountDisburse(false)
                 .userId(userId)
                 .createdAt(LocalDateTime.now())
                 .build();
@@ -63,6 +64,7 @@ public class LoanHelper {
                 .riskLevel(loanApplication.getRiskLevel())
                 .createdAt(loanApplication.getCreatedAt().toString())
                 .email(loanApplication.getEmail())
+                .isAccountDisburse(loanApplication.isAccountDisburse())
                 .build();
     }
 }

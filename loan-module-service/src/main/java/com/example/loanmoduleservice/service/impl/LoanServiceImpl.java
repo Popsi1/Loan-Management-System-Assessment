@@ -19,9 +19,14 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 //import org.apache.commons.lang3.EnumUtils;
+import org.apache.commons.lang3.BooleanUtils;
 import org.apache.commons.lang3.EnumUtils;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
+
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 
 @Service
 @RequiredArgsConstructor
@@ -33,57 +38,114 @@ public class LoanServiceImpl implements LoanService {
     private final NotificationService notificationService;
     private final TransactionLogService transactionLogService;
     private final RepaymentService repaymentService;
+    private final AuditService auditService;
 
 
-    private static final double BASE_INTEREST_RATE = 5.0;
+    private static final BigDecimal BASE_INTEREST_RATE = BigDecimal.valueOf(5.0);
 
-    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto, Long userId) {
+    public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationRequest, Long userId) {
 
-        double incomeToLoanRatio = loanApplicationDto.getAnnualIncome() / loanApplicationDto.getLoanAmount();
+        // Calculate Income-to-Loan Ratio
+        BigDecimal incomeToLoanRatio = loanApplicationRequest.getAnnualIncome()
+                .divide(loanApplicationRequest.getLoanAmount(), RoundingMode.HALF_UP);
+
+        // Assess Risk
         String risk = riskAssessmentService.assessRisk(incomeToLoanRatio);
 
+        // Deny loan application if risk is high
         if ("HIGH".equals(risk)) {
-            throw new RuntimeException("Loan application denied due to high risk.");
+            auditService.logAuditEvent("Loan application denied for userId: " + userId, "HIGH_RISK", userId);
+            throw new BadRequestException("Loan application denied due to high risk.");
         }
 
-        LoanApplication loanApplication = LoanHelper.buildLoanApplicationEntity(loanApplicationDto, userId);
+        // Build Loan Application Entity
+        LoanApplication loanApplication = LoanHelper.buildLoanApplicationEntity(loanApplicationRequest, userId);
 
         loanApplication.setRiskLevel(risk);
         loanApplication.setInterestRate(calculateInterestRate(incomeToLoanRatio));
-        loanApplication.setEmi(calculateEMI(loanApplication.getLoanAmount(), loanApplication.getInterestRate(), loanApplication.getTenure()));
 
+        loanApplication.setEmi(calculateEMI(
+                loanApplication.getLoanAmount(),
+                loanApplication.getInterestRate(),
+                loanApplication.getTenure()
+        ));
+
+        // Save Loan Application with Audit Logging
         LoanApplication savedLoan = loanApplicationRepository.save(loanApplication);
+        auditService.logAuditEvent("Loan application created for userId: " + userId, "APPLICATION_CREATED", userId);
 
-        return DataResponse.successResponse("Loan Application created", LoanHelper.buildLoanApplicationResponseEntity(savedLoan));
-
+        return DataResponse.successResponse(
+                "Loan Application created successfully",
+                LoanHelper.buildLoanApplicationResponseEntity(savedLoan)
+        );
     }
 
-    public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status) {
-
-        if (!EnumUtils.isValidEnum(LoanApplicationStatus.class, status))
+    public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status, Long userId) {
+        if (!EnumUtils.isValidEnum(LoanApplicationStatus.class, status)) {
             throw new BadRequestException("Invalid Status");
+        }
 
         LoanApplication loanApplication = loanApplicationRepository.findById(loanApplicationId)
                 .orElseThrow(() -> new IllegalArgumentException("Loan application not found"));
 
-        if (status.equals(LoanApplicationStatus.REJECTED.name())){
-            loanApplication.setStatus(LoanApplicationStatus.REJECTED.name());
-            notificationService.notifyLoanRejection(loanApplication.getEmail());
-        } else if (status.equals(LoanApplicationStatus.APPROVED.name())) {
-            loanApplication.setStatus(LoanApplicationStatus.APPROVED.name());
-            notificationService.notifyLoanApproval(loanApplication.getEmail(), loanApplication.getLoanAmount(),
-                    loanApplication.getEmi(),loanApplication.getTenure());
-        } else if (status.equals(LoanApplicationStatus.REPAID.name())) {
-            loanApplication.setStatus(LoanApplicationStatus.REPAID.name());
-            notificationService.notifyLoanRepaid(loanApplication.getEmail(), loanApplication.getLoanAmount(),
-                    loanApplication.getEmi(),loanApplication.getTenure());
-        }else {
-            loanApplication.setStatus(LoanApplicationStatus.PENDING.name());
+        String oldStatus = loanApplication.getStatus();
+        loanApplication.setStatus(status);
+
+        switch (LoanApplicationStatus.valueOf(status)) {
+            case REJECTED:
+                notificationService.notifyLoanRejection(loanApplication.getEmail());
+                auditService.logAuditEvent(
+                        "Loan application rejected for userId: " + loanApplication.getUserId(),
+                        "APPLICATION_REJECTED",
+                        userId
+                );
+                break;
+            case APPROVED:
+                notificationService.notifyLoanApproval(
+                        loanApplication.getEmail(),
+                        loanApplication.getLoanAmount(),
+                        loanApplication.getEmi(),
+                        loanApplication.getTenure()
+                );
+                auditService.logAuditEvent(
+                        "Loan application approved for userId: " + loanApplication.getUserId(),
+                        "APPLICATION_APPROVED",
+                        userId
+                );
+                break;
+            case REPAID:
+                notificationService.notifyLoanRepaid(
+                        loanApplication.getEmail(),
+                        loanApplication.getLoanAmount(),
+                        loanApplication.getEmi(),
+                        loanApplication.getTenure()
+                );
+                auditService.logAuditEvent(
+                        "Loan application marked as repaid for userId: " + loanApplication.getUserId(),
+                        "APPLICATION_REPAID",
+                        userId
+                );
+                break;
+            default:
+                auditService.logAuditEvent(
+                        "Loan application status changed to pending for userId: " + loanApplication.getUserId(),
+                        "APPLICATION_PENDING",
+                        userId
+                );
         }
+
         LoanApplication savedLoan = loanApplicationRepository.save(loanApplication);
 
-        return DataResponse.successResponse("Loan Application created", LoanHelper.buildLoanApplicationResponseEntity(savedLoan));
+        auditService.logAuditEvent(
+                "Loan application status updated from " + oldStatus + " to " + status + " for userId: " + loanApplication.getUserId(),
+                "STATUS_UPDATE",
+                userId
+        );
 
+        return DataResponse.successResponse(
+                "Loan Application status updated",
+                LoanHelper.buildLoanApplicationResponseEntity(savedLoan)
+        );
     }
 
     public ApiDataResponseDto getLoanApplication(Long loanApplicationId) {
@@ -94,18 +156,55 @@ public class LoanServiceImpl implements LoanService {
 
     }
 
-    private double calculateInterestRate(double incomeToLoanRatio) {
-        return BASE_INTEREST_RATE + (incomeToLoanRatio < 3 ? 1.5 : 0.5);
+    /**
+     * Calculates the interest rate based on the income-to-loan ratio.
+     *
+     * @param incomeToLoanRatio the ratio of annual income to loan amount
+     * @return the calculated interest rate as a BigDecimal
+     */
+    private BigDecimal calculateInterestRate(BigDecimal incomeToLoanRatio) {
+        if (incomeToLoanRatio.compareTo(BigDecimal.valueOf(3)) >= 0) {
+            return BASE_INTEREST_RATE.add(BigDecimal.valueOf(0.0)); // No additional risk increment for low risk
+        } else if (incomeToLoanRatio.compareTo(BigDecimal.valueOf(1.5)) >= 0) {
+            return BASE_INTEREST_RATE.add(BigDecimal.valueOf(5.0)); // Medium risk increment
+        } else {
+            return BASE_INTEREST_RATE.add(BigDecimal.valueOf(10.0)); // High risk increment
+        }
     }
 
-    private double calculateEMI(double loanAmount, double annualInterestRate, int tenureInMonths) {
-        double monthlyRate = (annualInterestRate / 100) / 12;
-        return (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, tenureInMonths)) /
-                (Math.pow(1 + monthlyRate, tenureInMonths) - 1);
+
+    /**
+     * Calculates the Equated Monthly Installment (EMI) for a loan.
+     *
+     * @param loanAmount  the principal loan amount
+     * @param tenureInMonths  the annual interest rate as a percentage (e.g., 5.0 for 5%)
+     * @param annualInterestRate the tenure of the loan in years
+     * @return the EMI as a BigDecimal
+     */
+    public BigDecimal calculateEMI(BigDecimal loanAmount, BigDecimal annualInterestRate, int tenureInMonths) {
+        // Convert the annual interest rate into monthly rate
+        BigDecimal monthlyRate = annualInterestRate.divide(BigDecimal.valueOf(100), MathContext.DECIMAL128)
+                .divide(BigDecimal.valueOf(12), MathContext.DECIMAL128);
+
+        // EMI formula
+        BigDecimal onePlusRate = BigDecimal.ONE.add(monthlyRate);
+        BigDecimal power = onePlusRate.pow(tenureInMonths);
+
+        // EMI = [loanAmount * monthlyRate * (1 + monthlyRate)^tenure] / [(1 + monthlyRate)^tenure - 1]
+        BigDecimal numerator = loanAmount.multiply(monthlyRate).multiply(power);
+        BigDecimal denominator = power.subtract(BigDecimal.ONE);
+
+        // Final EMI result
+        BigDecimal emi = numerator.divide(denominator, 2, RoundingMode.HALF_UP); // Rounding to 2 decimal places for accuracy
+
+        return emi;
     }
+
+
+
 
     @Transactional
-    public ApiDataResponseDto disburseLoan(Long loanApplicationId, BankDetails bankDetails) throws JsonProcessingException {
+    public ApiDataResponseDto disburseLoan(Long loanApplicationId, BankDetails bankDetails, Long actinBy) throws JsonProcessingException {
         LoanApplication loanApplication = loanApplicationRepository.findById(loanApplicationId)
                 .orElseThrow(() -> new ResourceNotFoundException("Loan application not found"));
 
@@ -124,7 +223,16 @@ public class LoanServiceImpl implements LoanService {
 
         LoanDisbursement savedDisbursement = loanDisbursementRepository.save(disbursement);
 
+        loanApplication.setAccountDisburse(true);
+        loanApplicationRepository.save(loanApplication);
+
         executeAsyncTasks(loanApplication, bankDetails, savedDisbursement);
+
+        auditService.logAuditEvent(
+                "Loan disbursed: loanApplicationId=" + loanApplicationId + ", userId=" + loanApplication.getUserId(),
+                "LOAN_DISBURSEMENT",
+                actinBy
+        );
 
         return DataResponse.successResponse("Loan Application created",
                 LoanHelper.buildLoanDisbursementResponseEntity(loanApplication, savedDisbursement));
@@ -134,9 +242,8 @@ public class LoanServiceImpl implements LoanService {
         if (!LoanApplicationStatus.APPROVED.name().equals(loanApplication.getStatus())) {
             throw new BadRequestException("Loan application must be approved for disbursement.");
         }
-
-        if (!"APPROVED".equals(loanApplication.getStatus())) {
-            throw new BadRequestException("Loan application must be approved for disbursement.");
+        if (BooleanUtils.isTrue(loanApplication.isAccountDisburse())) {
+            throw new BadRequestException("Loan application is already disbursed.");
         }
     }
 

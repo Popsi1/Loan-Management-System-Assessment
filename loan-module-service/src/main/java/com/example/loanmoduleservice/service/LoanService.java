@@ -7,8 +7,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 public interface LoanService {
     public ApiDataResponseDto applyForLoan(LoanApplicationRequest loanApplicationDto, Long userId);
-    public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status);
+    public ApiDataResponseDto updateLoanStatus(Long loanApplicationId, String status, Long userId);
     public ApiDataResponseDto getLoanApplication(Long loanApplicationId);
 
-    public ApiDataResponseDto disburseLoan(Long loanApplicationId, BankDetails bankDetails) throws JsonProcessingException;
+    public ApiDataResponseDto disburseLoan(Long loanApplicationId, BankDetails bankDetails, Long userId) throws JsonProcessingException;
 }

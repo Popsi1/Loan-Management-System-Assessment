@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
@@ -29,12 +30,12 @@ public class RepaymentSchedule {
     private LocalDate dueDate;
 
     @Column(nullable = false)
-    private Double installmentAmount;
+    private BigDecimal installmentAmount;
 
     @Column(nullable = false)
     private Boolean isPaid = false;
     private Integer missedPaymentCount = 0;
-    private Double penaltyAmount = 0.0;
+    private BigDecimal penaltyAmount;
 
     @Column(nullable = false, updatable = false)
     @CreatedDate

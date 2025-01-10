@@ -1,5 +1,7 @@
 package com.example.loanmoduleservice.service;
 
+import java.math.BigDecimal;
+
 public interface RiskAssessmentService {
-    public String assessRisk(double incomeToLoanRatio);
+    public String assessRisk(BigDecimal incomeToLoanRatio);
 }

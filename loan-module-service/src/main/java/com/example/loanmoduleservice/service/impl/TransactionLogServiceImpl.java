@@ -12,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -28,7 +29,7 @@ public class TransactionLogServiceImpl implements TransactionLogService {
 
 
     public void recordTransaction(Long loanApplicationId, BankDetails payerBankDetails, BankDetails receiverBankDetails,
-                                  Double amount, String transactionId, String transactionType, Long userId) throws JsonProcessingException {
+                                  BigDecimal amount, String transactionId, String transactionType, Long userId) throws JsonProcessingException {
         ObjectMapper objectMapper = new ObjectMapper();
 
         String payerBankDetails1 = Objects.isNull(payerBankDetails) ? "" : objectMapper.writeValueAsString(payerBankDetails);

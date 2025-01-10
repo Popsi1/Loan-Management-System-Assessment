@@ -56,6 +56,11 @@ public class GlobalResponseEntityExceptionHandler extends ResponseEntityExceptio
                 return ResponseEntity.of(Optional.of(DataResponse.errorResponse(e.getMessage())));
         }
 
+        @ExceptionHandler(ArithmeticException.class)
+        public ResponseEntity<Object> handleArithmeticException(ArithmeticException e) {
+                return ResponseEntity.of(Optional.of(DataResponse.errorResponse(e.getMessage())));
+        }
+
         @ExceptionHandler(DataIntegrityViolationException.class)
         @ResponseStatus(HttpStatus.BAD_REQUEST)
         public ResponseEntity<Map<String, String>> handleDataIntegrityViolationException(DataIntegrityViolationException ex) {

@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.CreatedDate;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 @Entity
@@ -31,7 +32,7 @@ public class TransactionLog {
 
     private String receiverbankDetails;
 
-    private Double amount;
+    private BigDecimal amount;
 
     @Column(nullable = false, updatable = false)
     @CreatedDate

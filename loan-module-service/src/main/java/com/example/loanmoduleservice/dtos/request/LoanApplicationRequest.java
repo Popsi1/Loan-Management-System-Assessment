@@ -3,6 +3,8 @@ package com.example.loanmoduleservice.dtos.request;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 public class LoanApplicationRequest {
 
@@ -14,8 +16,8 @@ public class LoanApplicationRequest {
     private String email;
 
     @NotNull(message = "Loan amount is required")
-    @Min(value = 1000, message = "Loan amount must be at least 1000")
-    private Double loanAmount;
+    @DecimalMin(value = "1000.00", inclusive = true, message = "Loan amount must be at least 1000")
+    private BigDecimal loanAmount;
 
     @NotNull(message = "Tenure is required")
     @Min(value = 6, message = "Minimum tenure is 6 months")
@@ -23,8 +25,8 @@ public class LoanApplicationRequest {
     private Integer tenure;
 
     @NotNull(message = "Annual income is required")
-    @Min(value = 5000, message = "Annual income must be at least 5000")
-    private Double annualIncome;
-
+    @DecimalMin(value = "5000.00", inclusive = true, message = "Annual income must be at least 5000")
+    private BigDecimal annualIncome;
 }
+
 
